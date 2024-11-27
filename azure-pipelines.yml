@@ -1,0 +1,44 @@
+trigger:
+  - main
+
+pool:
+  name: project
+
+steps:
+  - script: echo "Stage 1 - Setting up Java version."
+    displayName: "Setup Java Environment"
+
+  - task: Maven@3
+    displayName: "Build Maven Project"
+    inputs:
+      mavenPomFile: 'pom.xml'
+      mavenOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkArchitecture: 'x64'
+      publishJUnitResults: true
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      goals: 'package'
+
+  - script: echo "Stage 2 - Maven build and test completed successfully."
+    displayName: "Build and Test Completion"
+
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish Build Artifacts"
+    inputs:
+      PathtoPublish: '$(System.DefaultWorkingDirectory)/target'
+      ArtifactName: 'my-java-artifacts'
+      publishLocation: 'container'
+
+  - script: echo "Stage 3 - Artifacts published successfully."
+    displayName: "Artifacts Publication Complete"
+
+  - task: PublishTestResults@2
+    displayName: "Publish Test Results"
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      failTaskOnFailedTests: true
+      searchFolder: '$(System.DefaultWorkingDirectory)'
+
+  - script: echo "Regression test is successfully completed."
+    displayName: "Regression Test Completion"
